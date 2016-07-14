@@ -23,6 +23,7 @@ function ItemDAO(database) {
     "use strict";
 
     this.db = database;
+    this.item = this.db.collection('item');
 
     this.getCategories = function(callback) {
         "use strict";
@@ -83,7 +84,7 @@ function ItemDAO(database) {
         *
         */
 
-        var q = this.db.collection('item');
+        var q = this.item;
         if (category.toLowerCase() === 'all') {
             q = q.find({});
         } else {
@@ -124,7 +125,7 @@ function ItemDAO(database) {
 
         // TODO Include the following line in the appropriate
         // place within your code to pass the count to the callback.
-        var q = this.db.collection('item');
+        var q = this.item;
         if (category.toLowerCase() === 'all') {
             q = q.count({});
         } else {
@@ -167,19 +168,23 @@ function ItemDAO(database) {
         * description. You should simply do this in the mongo shell.
         *
         */
+        var q = this.item;
+        q.find({$text: {$search: query}})
+        .sort({'_id': 1 })
+        .skip(page*itemsPerPage)
+        .limit(itemsPerPage)
+        .toArray(function(err, docs) {
 
-        var item = this.createDummyItem();
-        var items = [];
-        for (var i=0; i<5; i++) {
-            items.push(item);
-        }
+            callback(docs);
+        });
+
 
         // TODO-lab2A Replace all code above (in this method).
 
         // TODO Include the following line in the appropriate
         // place within your code to pass the items for the selected page
         // of search results to the callback.
-        callback(items);
+        // callback(items);
     }
 
 
@@ -200,8 +205,13 @@ function ItemDAO(database) {
         * a SINGLE text index on title, slogan, and description. You should
         * simply do this in the mongo shell.
         */
+        var q = this.item;
 
-        callback(numItems);
+        q.count({$text: {$search: query}})
+        .then(function(count) {
+            callback(count);
+        });
+
     }
 
 
